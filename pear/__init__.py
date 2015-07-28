@@ -24,7 +24,7 @@ def query(string):
 
 @cli.command()
 @click.argument('package')
-def download(package):
+def install(package):
     f = urllib.request.urlopen('https://aur4.archlinux.org/rpc.php?type=info&arg={}'.format(package))
     result = json.loads(f.read().decode('utf8'))
     packages = result['resultcount']

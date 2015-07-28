@@ -51,6 +51,3 @@ def install(package):
         os.chdir(directory)
         subprocess.call(['makepkg', '-s', '-i'])
         os.chdir('..')
-
-if __name__ == '__main__':
-    cli()

@@ -4,6 +4,7 @@ import urllib.request
 import tarfile
 import os
 import subprocess
+import operator
 
 
 @click.group()
@@ -14,8 +15,12 @@ def cli():
 @cli.command()
 @click.argument('string')
 def query(string):
-    f = urllib.request.urlopen('https://aur.archlinux.org/rpc.php?type=search&arg={}'.format(string))
-    print(json.loads(f.read().decode('utf8')))
+    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc.php?type=search&arg={}'.format(string))
+    details = map(operator.itemgetter('Name', 'Version', 'Description'),
+                  json.loads(f.read().decode('utf8'))['results'])
+    formatted = map(lambda x: '{} - {}\n : {}\n----'.format(*x),
+                    details)
+    print('\n'.join(formatted))
 
 @cli.command()
 @click.argument('package')

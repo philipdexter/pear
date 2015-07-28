@@ -1,10 +1,15 @@
 from setuptools import setup
 
+def read_file(f):
+    with open(f) as f:
+        return f.read()
+
 setup(
-    name='pear',
+    name='pear-aur',
     packages = ['pear'],
     version='0.1',
     description = 'A stupidly simple aur helper',
+    long_description=read_file('README.rst'),
     author = 'Philip Dexter',
     author_email = 'philip.dexter@gmail.com',
     url = 'https://github.com/philipdexter/pear',

@@ -3,14 +3,26 @@ import json
 import urllib.request
 import tarfile
 import os
+import os.path
 import subprocess
 import operator
 
+_config_file = os.path.expanduser('~/.pear')
 
 @click.group()
 @click.version_option()
-def cli():
-    pass
+@click.pass_context
+def cli(ctx):
+    ctx.obj = {}
+    if not os.path.isfile(_config_file):
+        with open(_config_file, 'a'):
+            pass
+    with open(_config_file, 'r') as f:
+        contents = f.read().strip()
+    try:
+        ctx.obj['packages'] = dict(map(lambda x: x.strip().split(' '), contents.split('\n')))
+    except ValueError:
+        pass
 
 @cli.command()
 @click.argument('string')
@@ -24,7 +36,8 @@ def query(string):
 
 @cli.command()
 @click.argument('package')
-def install(package):
+@click.pass_context
+def install(ctx, package):
     f = urllib.request.urlopen('https://aur4.archlinux.org/rpc.php?type=info&arg={}'.format(package))
     result = json.loads(f.read().decode('utf8'))
     packages = result['resultcount']
@@ -51,3 +64,13 @@ def install(package):
         os.chdir(directory)
         subprocess.call(['makepkg', '-s', '-i'])
         os.chdir('..')
+    packages = ctx.obj.get('packages', {})
+    pkg = result['Name']
+    version = result['Version']
+    pkg_version = packages.get(pkg)
+    print(pkg, version, pkg_version)
+    if pkg_version != version:
+        packages[pkg] = version
+    contents = map(lambda x: '{} {}'.format(x, packages[x]), list(packages))
+    with open(_config_file, 'w') as f:
+        f.write('\n'.join(contents) + '\n')

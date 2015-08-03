@@ -24,6 +24,8 @@ def cli(ctx):
     except ValueError:
         pass
 
+
+
 @cli.command()
 @click.argument('string')
 def query(string):
@@ -34,19 +36,41 @@ def query(string):
                     details)
     print('\n'.join(formatted))
 
-@cli.command()
-@click.argument('package')
-@click.pass_context
-def install(ctx, package):
+def get_package(package):
     f = urllib.request.urlopen('https://aur4.archlinux.org/rpc.php?type=info&arg={}'.format(package))
     result = json.loads(f.read().decode('utf8'))
     packages = result['resultcount']
-    if packages > 1:
-        print('error: multiple packages found')
-    elif packages == 0:
-        print('error: no packages found')
+    if packages != 1:
+        return None
+    result = result['results']
+    return result
+
+@cli.command()
+@click.pass_context
+def upgrade(ctx):
+    local_packages = ctx.obj.get('packages', {}).items()
+    remote_packages = map(get_package, map(operator.itemgetter(0), local_packages))
+    remote_package_versions = map(operator.itemgetter('Version'), remote_packages)
+    for (n, lv), rv in zip(local_packages, remote_package_versions):
+        print(n, lv, rv)
+        if lv != rv:
+            print('upgrading {} from {} to {}'.format(n, lv, rv))
+            install(ctx, n)
+    print('done')
+
+
+@cli.command(name='list')
+@click.pass_context
+def listpackages(ctx):
+    local_packages = sorted(ctx.obj.get('packages', {}).items(), key=operator.itemgetter(0))
+    for p, v in local_packages:
+        print(p, v)
+
+def install(ctx, package):
+    result = get_package(package)
+    if result is None:
+        print('error: no single package found')
     else:
-        result = result['results']
         print(result['URLPath'])
         f = urllib.request.urlopen('https://aur4.archlinux.org/{}'.format(result['URLPath']))
         tar_file = '{}.tar.gz'.format(result['Name'])
@@ -64,13 +88,19 @@ def install(ctx, package):
         os.chdir(directory)
         subprocess.call(['makepkg', '-s', '-i'])
         os.chdir('..')
-    packages = ctx.obj.get('packages', {})
-    pkg = result['Name']
-    version = result['Version']
-    pkg_version = packages.get(pkg)
-    print(pkg, version, pkg_version)
-    if pkg_version != version:
-        packages[pkg] = version
-    contents = map(lambda x: '{} {}'.format(x, packages[x]), list(packages))
-    with open(_config_file, 'w') as f:
-        f.write('\n'.join(contents) + '\n')
+
+        packages = ctx.obj.get('packages', {})
+        pkg = result['Name']
+        version = result['Version']
+        pkg_version = packages.get(pkg)
+        if pkg_version != version:
+            packages[pkg] = version
+        contents = map(lambda x: '{} {}'.format(x, packages[x]), list(packages))
+        with open(_config_file, 'w') as f:
+            f.write('\n'.join(contents) + '\n')
+
+@cli.command(name='install')
+@click.argument('package')
+@click.pass_context
+def install_cli(ctx, package):
+    install(ctx, package)

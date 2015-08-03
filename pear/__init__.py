@@ -6,6 +6,7 @@ import os
 import os.path
 import subprocess
 import operator
+import tempfile
 
 _config_file = os.path.expanduser('~/.pear')
 
@@ -77,21 +78,24 @@ def install(ctx, package):
     else:
         print(result['URLPath'])
         f = urllib.request.urlopen('https://aur4.archlinux.org/{}'.format(result['URLPath']))
-        tar_file = '{}.tar.gz'.format(result['Name'])
-        directory = '{}'.format(result['Name'])
-        with open(tar_file, 'wb') as out:
-            out.write(f.read())
-        tar = tarfile.open(tar_file)
-        tar.extractall()
-        tar.close()
-        with open('{}/PKGBUILD'.format(directory)) as f:
-            for line in f:
-                if line.startswith('depends='):
-                    line = line.strip().split('=')[1].strip('()').split(' ')
-                    print('dependencies: {}'.format(' '.join(line)))
-        os.chdir(directory)
-        subprocess.call(['makepkg', '-s', '-i'])
-        os.chdir('..')
+        current_path = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            os.chdir(tmpdir)
+            tar_file = '{}.tar.gz'.format(result['Name'])
+            directory = '{}'.format(result['Name'])
+            with open(tar_file, 'wb') as out:
+                out.write(f.read())
+            tar = tarfile.open(tar_file)
+            tar.extractall()
+            tar.close()
+            with open('{}/PKGBUILD'.format(directory)) as f:
+                for line in f:
+                    if line.startswith('depends='):
+                        line = line.strip().split('=')[1].strip('()').split(' ')
+                        print('dependencies: {}'.format(' '.join(line)))
+            os.chdir(directory)
+            subprocess.call(['makepkg', '-s', '-i'])
+            os.chdir(current_path)
 
         packages = ctx.obj.get('packages', {})
         pkg = result['Name']

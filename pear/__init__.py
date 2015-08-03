@@ -100,7 +100,9 @@ def install(ctx, package):
             f.write('\n'.join(contents) + '\n')
 
 @cli.command(name='install')
-@click.argument('package')
+@click.argument('packages', nargs=-1)
 @click.pass_context
-def install_cli(ctx, package):
-    install(ctx, package)
+def install_cli(ctx, packages):
+    for p in packages:
+        print('installing {}'.format(p))
+        install(ctx, p)

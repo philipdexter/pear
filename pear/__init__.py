@@ -55,10 +55,11 @@ def upgrade(ctx):
         if rv is None:
             print('failed to find {} on server'.format(n))
             continue
-        print(n, lv, rv)
-        if lv != rv:
+        elif lv != rv:
             print('upgrading {} from {} to {}'.format(n, lv, rv))
             install(ctx, n)
+        else:
+            print('{} is up to date'.format(n))
     print('done')
 
 

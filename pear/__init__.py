@@ -50,8 +50,11 @@ def get_package(package):
 def upgrade(ctx):
     local_packages = ctx.obj.get('packages', {}).items()
     remote_packages = map(get_package, map(operator.itemgetter(0), local_packages))
-    remote_package_versions = map(operator.itemgetter('Version'), remote_packages)
+    remote_package_versions = map(lambda x: x and x['Version'], remote_packages)
     for (n, lv), rv in zip(local_packages, remote_package_versions):
+        if rv is None:
+            print('failed to find {} on server'.format(n))
+            continue
         print(n, lv, rv)
         if lv != rv:
             print('upgrading {} from {} to {}'.format(n, lv, rv))

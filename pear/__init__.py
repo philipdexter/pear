@@ -8,24 +8,13 @@ import subprocess
 import operator
 import tempfile
 
-_config_file = os.path.expanduser('~/.pear')
-
 @click.group()
 @click.version_option()
 @click.pass_context
 def cli(ctx):
     ctx.obj = {}
-    if not os.path.isfile(_config_file):
-        with open(_config_file, 'a'):
-            pass
-    with open(_config_file, 'r') as f:
-        contents = f.read().strip()
-    try:
-        ctx.obj['packages'] = dict(map(lambda x: x.strip().split(' '), contents.split('\n')))
-    except ValueError:
-        pass
-
-
+    pacman_output = subprocess.check_output(['pacman', '-Qm']).decode('utf-8')
+    ctx.obj['packages'] = dict(map(lambda n: n.split(' '), pacman_output.strip().split('\n')))
 
 @cli.command()
 @click.argument('string')
@@ -103,9 +92,6 @@ def install(ctx, package):
         pkg_version = packages.get(pkg)
         if pkg_version != version:
             packages[pkg] = version
-        contents = map(lambda x: '{} {}'.format(x, packages[x]), list(packages))
-        with open(_config_file, 'w') as f:
-            f.write('\n'.join(contents) + '\n')
 
 @cli.command(name='install')
 @click.argument('packages', nargs=-1)

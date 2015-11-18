@@ -7,6 +7,7 @@ import os.path
 import subprocess
 import operator
 import tempfile
+import sys
 
 @click.group()
 @click.version_option()
@@ -46,8 +47,14 @@ def upgrade(ctx):
             print('failed to find {} on server'.format(n))
             continue
         elif lv != rv:
-            print('upgrading {} from {} to {}'.format(n, lv, rv))
-            install(ctx, n)
+            print('found new version {} (old: {}) for {}, do you want to upgrade? [Y/n] '.format(lv, rv, n), end='')
+            sys.stdout.flush()
+            answer = sys.stdin.readline().strip()
+            if answer in ('', ' ', 'Y', 'y'):
+                print('upgrading {} from {} to {}'.format(n, lv, rv))
+                install(ctx, n)
+            else:
+                print('skipping upgrading {} from {} to {}'.format(n, lv, rv))
         else:
             print('{} is up to date'.format(n))
     print('done')

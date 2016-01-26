@@ -47,7 +47,7 @@ def upgrade(ctx):
             print('failed to find {} on server'.format(n))
             continue
         elif lv != rv:
-            print('found new version {} (old: {}) for {}, do you want to upgrade? [Y/n] '.format(lv, rv, n), end='')
+            print('found new version {} (old: {}) for {}, do you want to upgrade? [Y/n] '.format(rv, lv, n), end='')
             sys.stdout.flush()
             answer = sys.stdin.readline().strip()
             if answer in ('', ' ', 'Y', 'y'):

@@ -28,10 +28,8 @@ def query(string):
     print('\n'.join(formatted))
 
 def get_package(package):
-    print('getting {}'.format(package))
     f = urllib.request.urlopen('https://aur4.archlinux.org/rpc/?v=5&type=info&arg={}'.format(package))
     result = json.loads(f.read().decode('utf8'))
-    print('result = {}'.format(result))
     packages = result['resultcount']
     if packages != 1:
         return None

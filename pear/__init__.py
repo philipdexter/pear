@@ -20,7 +20,7 @@ def cli(ctx):
 @cli.command()
 @click.argument('string')
 def query(string):
-    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc.php?type=search&arg={}'.format(string))
+    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc/?v=5&type=search&arg={}'.format(string))
     details = map(operator.itemgetter('Name', 'Version', 'Description'),
                   json.loads(f.read().decode('utf8'))['results'])
     formatted = map(lambda x: '{} - {}\n : {}\n----'.format(*x),
@@ -28,12 +28,14 @@ def query(string):
     print('\n'.join(formatted))
 
 def get_package(package):
-    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc.php?type=info&arg={}'.format(package))
+    print('getting {}'.format(package))
+    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc/?v=5&type=info&arg={}'.format(package))
     result = json.loads(f.read().decode('utf8'))
+    print('result = {}'.format(result))
     packages = result['resultcount']
     if packages != 1:
         return None
-    result = result['results']
+    result = result['results'][0]
     return result
 
 @cli.command()

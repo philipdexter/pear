@@ -20,7 +20,7 @@ def cli(ctx):
 @cli.command()
 @click.argument('string')
 def query(string):
-    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc/?v=5&type=search&arg={}'.format(string))
+    f = urllib.request.urlopen('https://aur.archlinux.org/rpc/?v=5&type=search&arg={}'.format(string))
     details = map(operator.itemgetter('Name', 'Version', 'Description'),
                   json.loads(f.read().decode('utf8'))['results'])
     formatted = map(lambda x: '{} - {}\n : {}\n----'.format(*x),
@@ -28,7 +28,7 @@ def query(string):
     print('\n'.join(formatted))
 
 def get_package(package):
-    f = urllib.request.urlopen('https://aur4.archlinux.org/rpc/?v=5&type=info&arg={}'.format(package))
+    f = urllib.request.urlopen('https://aur.archlinux.org/rpc/?v=5&type=info&arg={}'.format(package))
     result = json.loads(f.read().decode('utf8'))
     packages = result['resultcount']
     if packages != 1:
@@ -73,7 +73,7 @@ def install(ctx, package):
         print('error: no single package found')
     else:
         print(result['URLPath'])
-        f = urllib.request.urlopen('https://aur4.archlinux.org/{}'.format(result['URLPath']))
+        f = urllib.request.urlopen('https://aur.archlinux.org/{}'.format(result['URLPath']))
         current_path = os.getcwd()
         with tempfile.TemporaryDirectory() as tmpdir:
             os.chdir(tmpdir)

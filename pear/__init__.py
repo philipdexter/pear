@@ -38,8 +38,11 @@ def get_package(package):
 
 @cli.command()
 @click.pass_context
-def upgrade(ctx):
+@click.option('--ignore', multiple=True, help='Package to ignore')
+def upgrade(ctx, ignore):
     local_packages = ctx.obj.get('packages', {}).items()
+    if ignore:
+        local_packages = list(filter(lambda x: x[0] not in ignore, local_packages))
     remote_packages = map(get_package, map(operator.itemgetter(0), local_packages))
     remote_package_versions = map(lambda x: x and x['Version'], remote_packages)
     for (n, lv), rv in zip(local_packages, remote_package_versions):
